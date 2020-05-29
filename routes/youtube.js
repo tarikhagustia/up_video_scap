@@ -9,7 +9,7 @@ const API_KEY = process.env.YOUTUBE_API_KEY || "AIzaSyClIa41lPaHwqW5pDNzqJsovSO0
  * Get Trending Videos  
  */
 router.get('/trending', cache(10), function (req, res, next) {
-  axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&chart=mostPopular&regionCode=ID&key=${API_KEY}`)
+  axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&maxResults=50&chart=mostPopular&regionCode=ID&key=${API_KEY}`)
     .then(response => {
       console.log(response.data)
       res.send(response.data);
