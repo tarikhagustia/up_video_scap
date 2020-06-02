@@ -3,6 +3,9 @@ const router = express.Router();
 const axios = require('axios').default;
 const cache = require("../libs/cache")
 const fetch = require('node-fetch');
+const TikTokScraper = require('tiktok-scraper');
+const puppeteer = require('puppeteer');
+
 const API_KEY = process.env.YOUTUBE_API_KEY || "AIzaSyClIa41lPaHwqW5pDNzqJsovSO0hFQlIJk";
 
 const config = {
@@ -16,19 +19,108 @@ const config = {
 /**
  * Get Trending Videos  
  */
-router.get('/trending', cache(5), function (req, res, next) {
-  const locale = 'ID';
-  axios.get(`https://t.tiktok.com/api/item_list/?count=30&id=1&type=5&secUid=&maxCursor=0&minCursor=0&sourceType=12&appId=1180&region=${locale}&language=en&verifyFp=verify_kav0pyn5_Tp5OlJLi_FF8G_4OL3_Bcb9_XBYcnRSScLoz&_signature=xKZsigAgEBJIs-FvkkTRV8SmbZAAJp.`, config)
-    .then(response => {
-      res.send(response.data.items)
-    }).catch(err => {
-      console.error(err)
-      res.status(500).send({
-        message: "Error"
+router.get('/trending', cache(60 * 5), async (req, res, next) => {
+  try {
+    const posts = await TikTokScraper.trend('', { number: 50 });
+    res.send(posts)
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({
+      message: "Error"
+    })
+  }
+});
+
+/**
+ * Get Discovery User
+ */
+router.get('/discovery/user', cache(60 * 5), async (req, res, next) => {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto('https://www.tiktok.com/discover?lang=en');
+  const results = await page.evaluate(async () => {
+    let results = []
+    let items = document.querySelectorAll('li._user_carousel_list-item')
+    items.forEach(el => {
+      const name = el.querySelector("h2._user_carousel_title").innerText
+      const url = el.querySelector("a").getAttribute("href")
+      const username = el.querySelector("h3._user_carousel_sub-title").innerText
+      const follower = el.querySelector("strong").innerText
+      const cssBg = el.querySelector("div._user_carousel_avatar")
+      style = cssBg.currentStyle || window.getComputedStyle(cssBg, false)
+      photo = style.backgroundImage.slice(4, -1).replace(/"/g, "");
+      results.push({
+        name, url, username, follower, photo
+      })
+    });
+
+    return results
+  })
+  await browser.close();
+  res.send(results)
+});
+
+/**
+ * Get Discovery Popular Hastag Videos and Music
+ */
+router.get('/discovery', cache(60 * 5), async (req, res, next) => {
+  const browser = await puppeteer.launch({
+    headless: true
+  });
+  const page = await browser.newPage();
+  await page.goto('https://www.tiktok.com/discover?lang=en');
+  const results = await page.evaluate(async () => {
+    let results = []
+    let items = document.querySelectorAll('div._explore_feed_item')
+
+    items.forEach(item => {
+      let tag = item.querySelector("h3._card_header_title").innerText
+      let url = item.querySelector("a._card_header_link").getAttribute("href")
+      let videos = item.querySelector("strong._card_header_subTitle").innerText
+
+      const cards = item.querySelectorAll("div._explore_feed_card_item")
+      let cardItems = []
+      cards.forEach(c => {
+        const url = c.querySelector("a").getAttribute("href")
+        const cssBg = c.querySelector("div.image-card")
+        style = cssBg.currentStyle || window.getComputedStyle(cssBg, false)
+        bi = style.backgroundImage.slice(4, -1).replace(/"/g, "");
+        cardItems.push({
+          url,
+          cover: bi
+        })
+      });
+      results.push({
+        type: tag.startsWith("#") ? "hastag" : "music",
+        tag,
+        url,
+        meta: videos,
+        videos: cardItems
       })
     })
-
-
+    return results
+  });
+  await browser.close();
+  res.send(results)
 });
+
+/**
+ * Get Video Details
+ */
+router.get('/videos/:username/:videoId', cache(60 * 60), async (req, res, next) => {
+  try {
+    // Format https://www.tiktok.com/@_kupitkcl/video/6832931475344674050
+    const { videoId, username } = req.params
+    const url = `https://www.tiktok.com/${username}/video/${videoId}`
+    const video = await TikTokScraper.getVideoMeta(url, {})
+    res.send(video)
+  } catch (err) {
+    console.error(err)
+    res.status(500).send({
+      message: "Error"
+    })
+  }
+});
+
 
 module.exports = router;
