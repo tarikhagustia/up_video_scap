@@ -4,6 +4,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var youtubeRouter = require('./routes/youtube');
+var tiktokRouter = require('./routes/tiktok');
 
 var app = express();
 
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/', indexRouter);
 app.use('/youtube', youtubeRouter);
+app.use('/tiktok', tiktokRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
