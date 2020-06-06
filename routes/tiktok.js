@@ -21,7 +21,7 @@ const config = {
  */
 router.get('/trending', cache(60 * 5), async (req, res, next) => {
   try {
-    const posts = await TikTokScraper.trend('', { number: 50 });
+    const posts = await TikTokScraper.trend('', { number: 50, proxy: "134.119.179.198:5836" });
     res.send(posts)
   } catch (err) {
     console.error(err)
@@ -38,6 +38,16 @@ router.get('/discovery/user', cache(60 * 5), async (req, res, next) => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto('https://www.tiktok.com/discover?lang=en');
+  try {
+    await page.waitForSelector('._explore_feed_card_item');
+  } catch (e) {
+    if (e instanceof puppeteer.errors.TimeoutError) {
+      // Do something if this is a timeout.
+      res.status(500).send({
+        message: "Error"
+      })
+    }
+  }
   const results = await page.evaluate(async () => {
     let results = []
     let items = document.querySelectorAll('li._user_carousel_list-item')
@@ -60,6 +70,25 @@ router.get('/discovery/user', cache(60 * 5), async (req, res, next) => {
   res.send(results)
 });
 
+async function autoScroll(page){
+  await page.evaluate(async () => {
+      await new Promise((resolve, reject) => {
+          var totalHeight = 0;
+          var distance = 100;
+          var timer = setInterval(() => {
+              var scrollHeight = document.body.scrollHeight;
+              window.scrollBy(0, distance);
+              totalHeight += distance;
+
+              if(totalHeight >= scrollHeight){
+                  clearInterval(timer);
+                  resolve();
+              }
+          }, 100);
+      });
+  });
+}
+
 /**
  * Get Discovery Popular Hastag Videos and Music
  */
@@ -68,7 +97,14 @@ router.get('/discovery', cache(60 * 5), async (req, res, next) => {
     headless: true
   });
   const page = await browser.newPage();
-  await page.goto('https://www.tiktok.com/discover?lang=en');
+  await page.goto('https://www.tiktok.com/discover?lang=en', { "waitUntil": "networkidle0" });
+  await page.setViewport({
+    width: 1200,
+    height: 800
+  });
+
+  await autoScroll(page);
+
   const results = await page.evaluate(async () => {
     let results = []
     let items = document.querySelectorAll('div._explore_feed_item')
@@ -84,6 +120,7 @@ router.get('/discovery', cache(60 * 5), async (req, res, next) => {
         const url = c.querySelector("a").getAttribute("href")
         const cssBg = c.querySelector("div.image-card")
         style = cssBg.currentStyle || window.getComputedStyle(cssBg, false)
+        console.log(style.backgroundImage)
         bi = style.backgroundImage.slice(4, -1).replace(/"/g, "");
         cardItems.push({
           url,
@@ -107,7 +144,7 @@ router.get('/discovery', cache(60 * 5), async (req, res, next) => {
 /**
  * Get Video Details
  */
-router.get('/videos/:username/:videoId', cache(60 * 60), async (req, res, next) => {
+router.get('/videos/:username/video/:videoId', cache(60 * 60), async (req, res, next) => {
   try {
     // Format https://www.tiktok.com/@_kupitkcl/video/6832931475344674050
     const { videoId, username } = req.params

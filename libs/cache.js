@@ -13,8 +13,8 @@ const cache = (duration) => {
             return
         } else {
             res.sendResponse = res.send
-            res.send = (body) => {
-                if(body.message != "Error") {
+            res.send = (body, code) => {
+                if(res.statusCode == 200) {
                     mcache.put(key, body, duration * 1000);
                 }
                 res.sendResponse(body)
