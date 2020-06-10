@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var youtubeRouter = require('./routes/youtube');
 var tiktokRouter = require('./routes/tiktok');
 var igRouter = require('./routes/instagram');
+var uploadRouter = require('./routes/upload');
 
 var app = express();
 
@@ -19,6 +20,7 @@ app.use('/', indexRouter);
 app.use('/youtube', youtubeRouter);
 app.use('/tiktok', tiktokRouter);
 app.use('/instagram', igRouter);
+app.use('/upload', uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
