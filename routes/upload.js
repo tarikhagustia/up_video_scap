@@ -4,6 +4,7 @@ const router = express.Router();
 const os = require('os');
 const upload = multer({ dest: os.tmpdir() });
 const db = require('../libs/db');
+const moment = require('moment');
 
 const ffmpeg = require('fluent-ffmpeg');
 // const resolutions = [
@@ -15,18 +16,18 @@ const resolutions = [
     resolution: '240x144',
     px: 144
   },
-  {
-    resolution: '480x360',
-    px: 360
-  },
-  {
-    resolution: '1280x720',
-    px: 720
-  },
-  {
-    resolution: '1920x1080',
-    px: 1080
-  },
+  // {
+  //   resolution: '480x360',
+  //   px: 360
+  // },
+  // {
+  //   resolution: '1280x720',
+  //   px: 720
+  // },
+  // {
+  //   resolution: '1920x1080',
+  //   px: 1080
+  // },
 
 ];
 
@@ -66,7 +67,7 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
   const { originalname, encoding, mimetype, destination, filename, path } = req.file;
   const slug = string_to_slug(originalname);
   const results = await asynqQuery("INSERT INTO videos SET ?", {
-    title: req.body.title, encoding, mimetype, original_filename: originalname, status: 'Uploading'
+    title: req.body.title, encoding, mimetype, original_filename: originalname, status: 'Uploading', created_at: moment().format('YYYY-MM-DD HH:mm:ss')
   });
 
   const videoId = results.insertId;
@@ -88,7 +89,7 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
 
       // TODO : Save to MySQL database about information
       const videoItemId = await asynqQuery("INSERT INTO video_files SET ? ", {
-        video_id: videoId, resolution: item.px, resolution_detail: item.resolution, file_location: item.outputDir, file_url: item.outputUrl
+        video_id: videoId, resolution: item.px, resolution_detail: item.resolution, file_location: item.outputDir, file_url: item.outputUrl, created_at: moment().format('YYYY-MM-DD HH:mm:ss')
       })
       console.log(`Rending ${item.outputUrl} success`);
 
@@ -99,6 +100,28 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
       id: videoId
     })
   }).run();
+
+  const renderImage = ffmpeg(path);
+  // Take Screenshoot
+  renderImage.on('filenames', function(filenames) {
+    filenames.forEach(item => {
+      asynqQuery("INSERT INTO thumbs SET ?", {
+        video_id: videoId,
+        file_url: `/images/${item}`,
+        created_at: moment().format('YYYY-MM-DD HH:mm:ss')
+      }).catch(err => {
+        console.error(err)
+      })
+    })
+  })
+  .screenshots({
+    // Will take screens at 20%, 40%, 60% and 80% of the video
+    count: 4,
+    filename: slug + '-at-%s-seconds.png',
+    folder: './public/images'
+  });
+
+
   res.send({
     status: true,
     message: "Your video is processing...",
