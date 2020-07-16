@@ -35,7 +35,7 @@ router.get('/trending', cache(60 * 5), async (req, res, next) => {
  * Get Discovery User
  */
 router.get('/discovery/user', cache(60 * 5), async (req, res, next) => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.goto('https://www.tiktok.com/discover?lang=en');
   try {
@@ -93,9 +93,7 @@ async function autoScroll(page){
  * Get Discovery Popular Hastag Videos and Music
  */
 router.get('/discovery', cache(60 * 5), async (req, res, next) => {
-  const browser = await puppeteer.launch({
-    headless: true
-  });
+  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.goto('https://www.tiktok.com/discover?lang=en', { "waitUntil": "networkidle0" });
   await page.setViewport({
