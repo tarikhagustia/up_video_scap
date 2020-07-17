@@ -21,7 +21,7 @@ const config = {
  */
 router.get('/trending', cache(60 * 5), async (req, res, next) => {
   try {
-    const posts = await TikTokScraper.trend('', { number: 50, proxy: "134.119.179.198:5836" });
+    const posts = await TikTokScraper.trend('', { number: 50 });
     res.send(posts)
   } catch (err) {
     console.error(err)
@@ -148,6 +148,7 @@ router.get('/videos/:username/video/:videoId', cache(60 * 60), async (req, res, 
     const { videoId, username } = req.params
     const url = `https://www.tiktok.com/${username}/video/${videoId}`
     const video = await TikTokScraper.getVideoMeta(url, {})
+    
     res.send(video)
   } catch (err) {
     console.error(err)

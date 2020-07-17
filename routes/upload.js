@@ -76,7 +76,7 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
   const render = ffmpeg(path);
   let videos = [];
   resolutions.forEach((item, key) => {
-    const outputDir = `./public/videos/${videoId}-${slug}-${item.resolution}.mp4`;
+    const outputDir = `${process.env.UPLOAD_LOCATION}/videos/${videoId}-${slug}-${item.resolution}.mp4`;
     const outputUrl = `/videos/${videoId}-${slug}-${item.resolution}.mp4`;
     videos.push({
       outputDir, outputUrl, resolution: item.resolution, px: item.px
@@ -118,7 +118,7 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
     // Will take screens at 20%, 40%, 60% and 80% of the video
     count: 4,
     filename: slug + '-at-%s-seconds.png',
-    folder: './public/images'
+    folder: `${process.env.UPLOAD_LOCATION}/images`
   });
 
 
