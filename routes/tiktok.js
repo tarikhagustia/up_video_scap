@@ -37,7 +37,7 @@ router.get('/trending', async (req, res, next) => {
 router.get('/discovery/user', async (req, res, next) => {
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
-  await page.goto('https://www.tiktok.com/discover?lang=en');
+  await page.goto('https://www.tiktok.com/discover/indonesia');
   try {
     await page.waitForSelector('._explore_feed_card_item');
   } catch (e) {
