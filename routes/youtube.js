@@ -8,7 +8,7 @@ const API_KEY = process.env.YOUTUBE_API_KEY;
 /**
  * Get Trending Videos  
  */
-router.get('/trending', cache(60 * 60), function (req, res, next) {
+router.get('/trending', function (req, res, next) {
   console.log(API_KEY)
   const locale = req.query.locale || "ID";
   const result = req.query.result || 10;

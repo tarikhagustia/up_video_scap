@@ -19,7 +19,7 @@ const config = {
 /**
  * Get Trending Videos  
  */
-router.get('/trending', cache(60 * 5), async (req, res, next) => {
+router.get('/trending', async (req, res, next) => {
   try {
     const posts = await TikTokScraper.trend('', { number: 50 });
     res.send(posts)
@@ -34,7 +34,7 @@ router.get('/trending', cache(60 * 5), async (req, res, next) => {
 /**
  * Get Discovery User
  */
-router.get('/discovery/user', cache(60 * 5), async (req, res, next) => {
+router.get('/discovery/user', async (req, res, next) => {
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.goto('https://www.tiktok.com/discover?lang=en');
@@ -92,7 +92,7 @@ async function autoScroll(page){
 /**
  * Get Discovery Popular Hastag Videos and Music
  */
-router.get('/discovery', cache(60 * 5), async (req, res, next) => {
+router.get('/discovery', async (req, res, next) => {
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.goto('https://www.tiktok.com/discover?lang=en', { "waitUntil": "networkidle0" });
@@ -142,7 +142,7 @@ router.get('/discovery', cache(60 * 5), async (req, res, next) => {
 /**
  * Get Video Details
  */
-router.get('/videos/:username/video/:videoId', cache(60 * 60), async (req, res, next) => {
+router.get('/videos/:username/video/:videoId', async (req, res, next) => {
   try {
     // Format https://www.tiktok.com/@_kupitkcl/video/6832931475344674050
     const { videoId, username } = req.params

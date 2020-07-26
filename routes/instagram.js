@@ -11,7 +11,7 @@ const client = new Instagram({ username : IG_USERNAME, password: IG_PASSWORD, co
 /**
  * Get Trending Videos  
  */
-router.get('/search', cache(10 * 60), async (req, res, next) => {
+router.get('/search', async (req, res, next) => {
   const q = req.query.q
   await client.login()
   const result = await client.search({ query: q })
@@ -21,7 +21,7 @@ router.get('/search', cache(10 * 60), async (req, res, next) => {
 /**
  * Get Media Feed By Hashtag
  */
-router.get('/media/hashtag', cache(10 * 60), async (req, res, next) => {
+router.get('/media/hashtag', async (req, res, next) => {
   const { hashtag } = req.query
   await client.login()
   const media = await client.getMediaFeedByHashtag({ hashtag: hashtag })
@@ -31,7 +31,7 @@ router.get('/media/hashtag', cache(10 * 60), async (req, res, next) => {
 /**
  * Get Short Code
  */
-router.get('/media/:shortcode', cache(10 * 60), async (req, res, next) => {
+router.get('/media/:shortcode', async (req, res, next) => {
   const { shortcode } = req.params
   await client.login()
   const media = await client.getMediaByShortcode({ shortcode })
