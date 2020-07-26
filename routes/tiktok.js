@@ -37,7 +37,7 @@ router.get('/trending', async (req, res, next) => {
 router.get('/discovery/user', async (req, res, next) => {
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
-  await page.goto('https://www.tiktok.com/discover/indonesia');
+  await page.goto('https://www.tiktok.com/discover?lang=en');
   try {
     await page.waitForSelector('._explore_feed_card_item');
   } catch (e) {
@@ -95,7 +95,7 @@ async function autoScroll(page){
 router.get('/discovery', async (req, res, next) => {
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
-  await page.goto('https://www.tiktok.com/discover?lang=en', { "waitUntil": "networkidle0" });
+  await page.goto('https://www.tiktok.com/discover/indonesia', { "waitUntil": "networkidle0" });
   await page.setViewport({
     width: 1200,
     height: 800
