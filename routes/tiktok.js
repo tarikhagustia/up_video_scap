@@ -92,7 +92,7 @@ async function autoScroll(page){
 /**
  * Get Discovery Popular Hastag Videos and Music
  */
-router.get('/discovery', async (req, res, next) => {
+router.get('/discovery', cache(60 * 5), async (req, res, next) => {
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.goto('https://www.tiktok.com/discover/indonesia', { "waitUntil": "networkidle0" });
@@ -142,7 +142,7 @@ router.get('/discovery', async (req, res, next) => {
 /**
  * Get Video Details
  */
-router.get('/videos/:username/video/:videoId', async (req, res, next) => {
+router.get('/videos/:username/video/:videoId', cache(60 * 5), async (req, res, next) => {
   try {
     // Format https://www.tiktok.com/@_kupitkcl/video/6832931475344674050
     const { videoId, username } = req.params
