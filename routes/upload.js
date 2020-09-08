@@ -16,18 +16,18 @@ const resolutions = [
     resolution: '240x144',
     px: 144
   },
-  {
-    resolution: '480x360',
-    px: 360
-  },
-  {
-    resolution: '1280x720',
-    px: 720
-  },
-  {
-    resolution: '1920x1080',
-    px: 1080
-  },
+  // {
+  //   resolution: '480x360',
+  //   px: 360
+  // },
+  // {
+  //   resolution: '1280x720',
+  //   px: 720
+  // },
+  // {
+  //   resolution: '1920x1080',
+  //   px: 1080
+  // },
 
 ];
 
@@ -60,14 +60,27 @@ function string_to_slug(str) {
   return str;
 }
 
+const handleLogin = (path) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(path, (err, metadata) => {
+      if(err) {
+        return reject(err)
+      }else{
+        return resolve(metadata.format)
+      }
+    })
+  })
+}
+
 /**
  * Upload Files
  */
 router.post('/videos', upload.single('video'), async (req, res, next) => {
   const { originalname, encoding, mimetype, destination, filename, path } = req.file;
   const slug = string_to_slug(originalname);
+  const meta = await handleLogin(path);
   const results = await asynqQuery("INSERT INTO videos SET ?", {
-    title: req.body.title, encoding, mimetype, original_filename: originalname, status: 'Uploading', created_at: moment().format('YYYY-MM-DD HH:mm:ss')
+    title: req.body.title, encoding, mimetype, original_filename: originalname, duration: meta.duration, status: 'Uploading', created_at: moment().format('YYYY-MM-DD HH:mm:ss')
   });
 
   const videoId = results.insertId;
@@ -78,15 +91,16 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
   resolutions.forEach((item, key) => {
     const outputDir = `${process.env.UPLOAD_LOCATION}/videos/${videoId}-${slug}-${item.resolution}.mp4`;
     const outputUrl = `/videos/${videoId}-${slug}-${item.resolution}.mp4`;
+
     videos.push({
       outputDir, outputUrl, resolution: item.resolution, px: item.px
     });
     render.output(outputDir)
       .size(item.resolution);
   })
-  render.on('end', () => {
+  render.on('end', (i) => {
+    console.log(i)
     videos.forEach(async (item) => {
-
       // TODO : Save to MySQL database about information
       const videoItemId = await asynqQuery("INSERT INTO video_files SET ? ", {
         video_id: videoId, resolution: item.px, resolution_detail: item.resolution, file_location: item.outputDir, file_url: item.outputUrl, created_at: moment().format('YYYY-MM-DD HH:mm:ss')
@@ -103,7 +117,7 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
 
   const renderImage = ffmpeg(path);
   // Take Screenshoot
-  renderImage.on('filenames', function(filenames) {
+  renderImage.on('filenames', function (filenames) {
     filenames.forEach(item => {
       asynqQuery("INSERT INTO thumbs SET ?", {
         video_id: videoId,
@@ -114,12 +128,12 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
       })
     })
   })
-  .screenshots({
-    // Will take screens at 20%, 40%, 60% and 80% of the video
-    count: 4,
-    filename: slug + '-at-%s-seconds.png',
-    folder: `${process.env.UPLOAD_LOCATION}/images`
-  });
+    .screenshots({
+      // Will take screens at 20%, 40%, 60% and 80% of the video
+      count: 4,
+      filename: slug + '-at-%s-seconds.png',
+      folder: `${process.env.UPLOAD_LOCATION}/images`
+    });
 
 
   res.send({
