@@ -16,18 +16,18 @@ const resolutions = [
     resolution: '240x144',
     px: 144
   },
-  // {
-  //   resolution: '480x360',
-  //   px: 360
-  // },
-  // {
-  //   resolution: '1280x720',
-  //   px: 720
-  // },
-  // {
-  //   resolution: '1920x1080',
-  //   px: 1080
-  // },
+  {
+    resolution: '480x360',
+    px: 360
+  },
+  {
+    resolution: '1280x720',
+    px: 720
+  },
+  {
+    resolution: '1920x1080',
+    px: 1080
+  },
 
 ];
 
