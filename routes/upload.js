@@ -7,6 +7,8 @@ const db = require('../libs/db');
 const moment = require('moment');
 const fs = require('fs');
 
+const { encode } = require('../libs/crypt');
+
 const ffmpeg = require('fluent-ffmpeg');
 // const resolutions = [
 //   '1920x1080', '1280x720', '480x360', '240x144'
@@ -89,13 +91,20 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
   // Start encoding
   const render = ffmpeg(path);
   let videos = [];
+  const ID = encode(10);
   resolutions.forEach((item, key) => {
-    const outputDir = `${process.env.UPLOAD_LOCATION}/videos/${item.px}/${videoId}-${slug}-${item.resolution}.m3u8`;
+    
+    const mainDir = `${process.env.UPLOAD_LOCATION}/videos/${ID}/${item.px}/`;
+    
     // Check if directory is not exist
-    if(!fs.existsSync(`${process.env.UPLOAD_LOCATION}/videos/${item.px}`)) {
-      fs.mkdirSync(`${process.env.UPLOAD_LOCATION}/videos/${item.px}`)
+  
+    if(!fs.existsSync(mainDir)) {
+      fs.mkdirSync(mainDir, {
+        recursive: true
+      })
     }
-    const outputUrl = `/videos/${item.px}/${videoId}-${slug}-${item.resolution}.m3u8`;
+    const outputDir = `${mainDir}${videoId}-${slug}-${item.resolution}.m3u8`;
+    const outputUrl = `/videos/${ID}/${item.px}/${videoId}-${slug}-${item.resolution}.m3u8`;
 
     videos.push({
       outputDir, outputUrl, resolution: item.resolution, px: item.px
