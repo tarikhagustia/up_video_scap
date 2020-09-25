@@ -5,6 +5,7 @@ const os = require('os');
 const upload = multer({ dest: os.tmpdir() });
 const db = require('../libs/db');
 const moment = require('moment');
+const fs = require('fs');
 
 const ffmpeg = require('fluent-ffmpeg');
 // const resolutions = [
@@ -63,9 +64,9 @@ function string_to_slug(str) {
 const handleLogin = (path) => {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(path, (err, metadata) => {
-      if(err) {
+      if (err) {
         return reject(err)
-      }else{
+      } else {
         return resolve(metadata.format)
       }
     })
@@ -89,15 +90,26 @@ router.post('/videos', upload.single('video'), async (req, res, next) => {
   const render = ffmpeg(path);
   let videos = [];
   resolutions.forEach((item, key) => {
-    const outputDir = `${process.env.UPLOAD_LOCATION}/videos/${videoId}-${slug}-${item.resolution}.mp4`;
-    const outputUrl = `/videos/${videoId}-${slug}-${item.resolution}.mp4`;
+    const outputDir = `${process.env.UPLOAD_LOCATION}/videos/${item.px}/${videoId}-${slug}-${item.resolution}.m3u8`;
+    // Check if directory is not exist
+    if(!fs.existsSync(`${process.env.UPLOAD_LOCATION}/videos/${item.px}`)) {
+      fs.mkdirSync(`${process.env.UPLOAD_LOCATION}/videos/${item.px}`)
+    }
+    const outputUrl = `/videos/${item.px}/${videoId}-${slug}-${item.resolution}.m3u8`;
 
     videos.push({
       outputDir, outputUrl, resolution: item.resolution, px: item.px
     });
+    render.outputOptions([
+      '-hls_time 5',
+      '-hls_list_size 14',
+      '-hls_flags omit_endlist', // +delete_segments
+      // `-hls_segment_filename ${process.env.UPLOAD_LOCATION}/videos/${item.px}/${videoId}_%05d.ts`
+    ])
     render.output(outputDir)
       .size(item.resolution);
   })
+ 
   render.on('end', (i) => {
     console.log(i)
     videos.forEach(async (item) => {
