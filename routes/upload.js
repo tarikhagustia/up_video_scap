@@ -23,14 +23,14 @@ const resolutions = [
     resolution: '480x360',
     px: 360
   },
-  {
-    resolution: '1280x720',
-    px: 720
-  },
-  {
-    resolution: '1920x1080',
-    px: 1080
-  },
+  // {
+  //   resolution: '1280x720',
+  //   px: 720
+  // },
+  // {
+  //   resolution: '1920x1080',
+  //   px: 1080
+  // },
 
 ];
 
@@ -80,7 +80,7 @@ const handleLogin = (path) => {
  */
 router.post('/videos', upload.single('video'), async (req, res, next) => {
   const { originalname, encoding, mimetype, destination, filename, path } = req.file;
-  const slug = string_to_slug(originalname);
+  const slug = encode(20);
   const meta = await handleLogin(path);
   const results = await asynqQuery("INSERT INTO videos SET ?", {
     title: req.body.title, encoding, mimetype, original_filename: originalname, duration: meta.duration, status: 'Uploading', created_at: moment().format('YYYY-MM-DD HH:mm:ss')
