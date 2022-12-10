@@ -10,7 +10,7 @@
     "axios": "^0.19.2",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
-    "express": "~4.16.1",
+    "express": "~4.17.3",
     "fb-video-downloader": "^1.0.3",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^51.0.0",
